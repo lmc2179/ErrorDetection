@@ -1,0 +1,5 @@
+.DS_Store
+activate
+env/
+env/*
+*.pyc
