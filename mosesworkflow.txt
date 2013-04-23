@@ -1,0 +1,26 @@
+~/mt/mosesdecoder/scripts/tokenizer/tokenizer.perl -l en < ~/mt/corpus/training/news-commentary-v7.fr-en.en > ~/mt/corpus/news-commentary-v7.fr-en.tok.en
+~/mt/mosesdecoder/scripts/tokenizer/tokenizer.perl -l fr < ~/mt/corpus/training/news-commentary-v7.fr-en.fr > ~/mt/corpus/news-commentary-v7.fr-en.tok.fr
+~/mt/mosesdecoder/scripts/recaser/train-truecaser.perl --model ~/mt/corpus/truecase-model.en --corpus  ~/mt/corpus/news-commentary-v7.fr-en.tok.en
+~/mt/mosesdecoder/scripts/recaser/train-truecaser.perl --model ~/mt/corpus/truecase-model.fr --corpus ~/mt/corpus/news-commentary-v7.fr-en.tok.fr
+~/mt/mosesdecoder/scripts/recaser/truecase.perl --model ~/mt/corpus/truecase-model.en < ~/mt/corpus/news-commentary-v7.fr-en.tok.en  > ~/mt/corpus/news-commentary-v7.fr-en.true.en
+~/mt/mosesdecoder/scripts/recaser/truecase.perl --model ~/mt/corpus/truecase-model.fr < ~/mt/corpus/news-commentary-v7.fr-en.tok.fr  > ~/mt/corpus/news-commentary-v7.fr-en.true.fr
+~/mt/mosesdecoder/scripts/training/clean-corpus-n.perl ~/mt/corpus/news-commentary-v7.fr-en.true fr en ~/mt/corpus/news-commentary-v7.fr-en.clean 1 80
+cd ~/mt/lm
+ngram-count -order 3 -interpolate -kndiscount -unk -text ~/mt/corpus/news-commentary-v7.fr-en.true.en -lm news-commentary-v7.fr-en.arpa.en
+~/mt/mosesdecoder/bin/build_binary  news-commentary-v7.fr-en.arpa.en  news-commentary-v7.fr-en.blm.en
+echo "is this an English sentence ?" | ~/mt/mosesdecoder/bin/query news-commentary-v7.fr-en.blm.en
+mkdir ~/mt/working
+cd ~/mt/working
+nohup nice ~/mt/mosesdecoder/scripts/training/train-model.perl -cores 4 -root-dir train -corpus ~/mt/corpus/news-commentary-v7.fr-en.clean -f fr -e en -alignment grow-diag-final-and -reordering msd-bidirectional-fe -lm 0:3:$HOME/mt/lm/news-commentary-v7.fr-en.blm.en:8 -external-bin-dir ~/mt/mosesdecoder/tools >& training.out &
+cd ~/mt/corpus
+wget http://www.statmt.org/wmt12/dev.tgz && tar zxvf dev.tgz
+~/mt/mosesdecoder/scripts/tokenizer/tokenizer.perl -l en < dev/news-test2008.en > news-test2008.tok.en
+~/mt/mosesdecoder/scripts/tokenizer/tokenizer.perl -l fr < dev/news-test2008.fr > news-test2008.tok.fr
+~/mt/mosesdecoder/scripts/recaser/truecase.perl --model truecase-model.en < news-test2008.tok.en > news-test2008.true.en
+~/mt/mosesdecoder/scripts/recaser/truecase.perl --model truecase-model.fr < news-test2008.tok.fr > news-test2008.true.fr
+cd ~/mt/working
+nohup nice ~/mt/mosesdecoder/scripts/training/mert-moses.pl --decoder-flags="-threads 4" ~/mt/corpus/news-test2008.true.fr ~/mt/corpus/news-test2008.true.en  ~/mt/mosesdecoder/bin/moses  train/model/moses.ini --mertdir ~/mt/mosesdecoder/bin/ &> mert.out &
+mkdir ~/mt/working/binarised-model
+~/mt/mosesdecoder/bin/processPhraseTable -ttable 0 0 train/model/phrase-table.gz -nscores 5 -out binarised-model/phrase-table
+~/mt/mosesdecoder/bin/processLexicalTable -in train/model/reordering-table.wbe-msd-bidirectional-fe.gz -out binarised-model/reordering-table
+echo "faire revenir les militants sur le terrain et convaincre que le vote est utile ." |  ~/mt/mosesdecoder/bin/moses -f binarised-model/moses.ini
