@@ -1,0 +1,7 @@
+- baseline DOCENT results
+- randomize order to evenly split topic-based essays into dev/test/train buckets
+- alignment file generator
+- experiment with LM (baseline only uses training english for LM)
+- experiment with augmented test (translated set of idiosyncratic errors)
+- experiment with different training models for MOSES / different training parameters
+- tokenize / stem input

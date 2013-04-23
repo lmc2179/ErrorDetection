@@ -1,7 +1,15 @@
-nucle2/
-nucle2/*
+CoNLL-preproc-README
+README
+corrected
+data/
+data_5types/
+flattened
 nucle/
 nucle/*
+m2scorer/
+scripts/
+system_gold.m2
+tmp/
 .DS_Store
 activate
 env/

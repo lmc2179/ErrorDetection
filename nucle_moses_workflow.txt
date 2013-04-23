@@ -1,0 +1,13 @@
+cd ~/mt/error_detection_lm
+ngram-count -order 3 -interpolate -kndiscount -unk -text ~/mt/error_detection_corpus/nucle.train.e -lm nucle_lm.en
+~/mt/mosesdecoder/bin/build_binary nucle_lm.en nucle_blm.en
+echo "is this an English sentence ?" | ~/mt/mosesdecoder/bin/query nucle_blm.en
+mkdir ~/mt/error_detection_working
+cd ~/mt/error_detection_working
+nohup nice ~/mt/mosesdecoder/scripts/training/train-model.perl -cores 4 -root-dir train -corpus ~/mt/error_detection_corpus/nucle.train -f f -e e -alignment grow-diag-final-and -reordering msd-bidirectional-fe -lm 0:3:$HOME/mt/error_detection_lm/nucle_blm.en:8 -external-bin-dir ~/mt/mosesdecoder/tools >& training.out &
+cd ~/mt/error_detection_working
+nohup nice ~/mt/mosesdecoder/scripts/training/mert-moses.pl --decoder-flags="-threads 4" ~/mt/error_detection_corpus/nucle.dev.f ~/mt/error_detection_corpus/nucle.dev.e  ~/mt/mosesdecoder/bin/moses train/model/moses.ini --mertdir ~/mt/mosesdecoder/bin/ &> mert.out &
+mkdir ~/mt/error_detection_working/binarised-model
+~/mt/mosesdecoder/bin/processPhraseTable -ttable 0 0 train/model/phrase-table.gz -nscores 5 -out binarised-model/phrase-table
+~/mt/mosesdecoder/bin/processLexicalTable -in train/model/reordering-table.wbe-msd-bidirectional-fe.gz -out binarised-model/reordering-table
+echo "faire revenir les militants sur le terrain et convaincre que le vote est utile ." |  ~/mt/mosesdecoder/bin/moses -f binarised-model/moses.ini
