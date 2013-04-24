@@ -1,3 +1,10 @@
+- downsample training set (bayesian prior)
+- equal probability for candidates in phrase table: 
+- split set, put in dropbox
+- test capitalization sensitivity in scorer
+- word-based alignment files
+- trim references from training set
+- integrate m2scorer into tuning process instead of Bleu
 - baseline DOCENT results
 - randomize order to evenly split topic-based essays into dev/test/train buckets
 - alignment file generator
