@@ -15,3 +15,11 @@ mkdir ~/mt/error_detection_working/binarised-model
  ~/mt/mosesdecoder/scripts/training/filter-model-given-input.pl filtered-nucle mert-work/moses.ini ~/mt/error_detection_corpus/nucle.test.f  -Binarizer ~/mt/mosesdecoder/bin/processPhraseTable
  nohup nice ~/mt/mosesdecoder/bin/moses -f ~/mt/error_detection_working/filtered-nucle/moses.ini < ~/mt/error_detection_corpus/nucle.test.f > ~/mt/error_detection_working/nucle.translated.e 2> ~/mt/error_detection_working/nucle.test.out &
   ~/mt/mosesdecoder/scripts/generic/multi-bleu.perl -lc ~/mt/error_detection_corpus/nucle.test.e < ~/mt/error_detection_working/nucle.translated.e
+------------------
+Optional Phrase Table pruning:
+ cd ~/mt/mosesdecoder/contrib/sigtest-filter/
+ make SALMDIR=/home/arvind/salm-master
+ /home/arvind/salm-master/Bin/Linux/Index/IndexSA.O32 /home/arvind/mt/error_detection_corpus/nucle.test.e
+ /home/arvind/salm-master/Bin/Linux/Index/IndexSA.O32 /home/arvind/mt/error_detection_corpus/nucle.test.f
+ cat phrase-table | ./filter-pt -e /home/arvind/mt/error_detection_corpus/nucle.test -f /home/arvind/mt/error_detection_corpus/nucle.test -l a+e -n 30 > phrase-table.pruned
+Afterwards, change phrase table used by moses.ini.
